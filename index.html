@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Asistencias — Bachillerato</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f0efe8;color:#1a1a1a;min-height:100vh}
+header{background:#3c348a;color:#fff;padding:.85rem 1.4rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:16px;font-weight:500}
+header .sub{font-size:12px;opacity:.75;margin-left:auto}
+.nav{display:flex;background:#fff;border-bottom:1.5px solid #e0dfd8;padding:0 1rem;overflow-x:auto;gap:2px}
+.nav-btn{padding:11px 18px;font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;color:#666;border-bottom:3px solid transparent;white-space:nowrap}
+.nav-btn.active{color:#3c348a;border-bottom-color:#3c348a}
+.nav-btn:hover:not(.active){background:#f5f5f0;color:#333}
+.panel{display:none;padding:1.1rem;max-width:980px;margin:0 auto}
+.panel.active{display:block}
+.card{background:#fff;border-radius:12px;border:.5px solid #ddd;padding:1rem 1.2rem;margin-bottom:.9rem}
+
+/* PERIODO SELECTOR */
+.periodo-bar{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.per-btn{padding:9px 22px;border-radius:10px;border:.5px solid #ccc;background:#fff;cursor:pointer;font-size:13px;font-weight:500;color:#555;transition:all .15s;text-align:left}
+.per-btn.active{background:#3c348a;color:#fff;border-color:#3c348a}
+.per-btn .per-titulo{font-size:14px;font-weight:500}
+.per-btn .per-rango{font-size:11px;opacity:.75;margin-top:2px}
+.per-btn.p2.active{background:#0f6e56}
+.per-btn.p2{border-color:#5dcaa5;color:#0f6e56}
+.per-btn.p2.active .per-rango{opacity:.85}
+
+/* GRUPO TABS */
+.gtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.9rem}
+.g-btn{padding:7px 16px;border-radius:20px;border:.5px solid #ccc;background:#fff;cursor:pointer;font-size:13px;font-weight:500;color:#555;transition:all .15s}
+.g-btn.active{background:#3c348a;color:#fff;border-color:#3c348a}
+.g-btn.p2.active{background:#0f6e56;border-color:#0f6e56}
+
+/* DIAS */
+.dias-grid{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:.6rem}
+.dia-btn{padding:5px 10px;border-radius:8px;border:.5px solid #ccc;background:#fff;cursor:pointer;text-align:center;transition:all .15s;min-width:62px}
+.dia-btn .dn{font-size:10px;color:#888}
+.dia-btn .df{font-size:12px;font-weight:500;color:#333}
+.dia-btn.activo{background:#3c348a;border-color:#3c348a}
+.dia-btn.activo .dn,.dia-btn.activo .df{color:#fff}
+.dia-btn.activo.p2{background:#0f6e56;border-color:#0f6e56}
+.dia-btn.hoy{border-color:#f0ad4e}
+.dia-btn.hoy .df{color:#b07d00}
+.dia-btn.activo.hoy .df{color:#fff}
+.dia-btn.con-data::after{content:'•';color:#27ae60;font-size:16px;line-height:1;display:block;margin-top:-4px}
+.dia-btn.activo.con-data::after{color:#a0ffb0}
+
+/* STATS */
+.stats-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:.9rem}
+.scard{background:#fff;border-radius:8px;padding:5px 12px;font-size:13px;border:.5px solid #ddd}
+.scard span{font-weight:500}
+.scard.p span{color:#1a8a42}.scard.a span{color:#c0392b}.scard.r span{color:#b07d00}.scard.n span{color:#888}.scard.s span{color:#3c348a}
+
+/* BOTONES */
+button{padding:7px 14px;border-radius:8px;border:.5px solid #ccc;background:#fff;cursor:pointer;font-size:13px;font-weight:500;transition:background .15s}
+button:hover{background:#eee}
+.btn-p{background:#3c348a;color:#fff;border-color:#3c348a}.btn-p:hover{background:#2d2870}
+.btn-p2{background:#0f6e56;color:#fff;border-color:#0f6e56}.btn-p2:hover{background:#085041}
+.btn-dl{background:#1a6b38;color:#fff;border-color:#1a6b38;font-size:15px;padding:10px 24px}.btn-dl:hover{background:#155e33}
+.btn-danger{color:#c0392b;border-color:#e8a0a0}.btn-danger:hover{background:#fdf0f0}
+.btn-sm{padding:5px 11px;font-size:12px}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:.8rem}
+.search{width:100%;padding:8px 13px;border:.5px solid #ccc;border-radius:8px;font-size:14px;margin-bottom:.8rem;background:#fff}
+.search:focus{outline:none;border-color:#3c348a}
+
+/* TABLA */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:.5px solid #ddd;font-size:13px}
+thead tr{background:#3c348a;color:#fff}
+thead tr.p2{background:#0f6e56}
+th{padding:9px 12px;font-weight:500;text-align:left;white-space:nowrap}
+tbody tr{border-bottom:.5px solid #eee}
+tbody tr:hover{background:#f8f8f5}
+tbody tr:last-child{border-bottom:none}
+td{padding:7px 12px;vertical-align:middle}
+td.num{color:#aaa;font-size:11px;width:28px}
+.abts{display:flex;gap:5px}
+.abt{width:31px;height:27px;border-radius:6px;border:.5px solid #ccc;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .12s;padding:0}
+.abt:hover{transform:scale(1.12)}
+.abt.p.on{background:#d4edda;border-color:#27ae60}
+.abt.a.on{background:#fde8e8;border-color:#e74c3c}
+.abt.r.on{background:#fff3cd;border-color:#f0ad4e}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500}
+.bp{background:#d4edda;color:#1a6b38}.ba{background:#fde8e8;color:#a93226}.br{background:#fff3cd;color:#856404}.bn{background:#eee;color:#666}
+
+/* ACUMULADO */
+.num-cell{text-align:center;font-size:13px}
+.num-cell.p{color:#1a8a42;font-weight:500}.num-cell.a{color:#c0392b;font-weight:500}.num-cell.r{color:#b07d00;font-weight:500}
+.pbar-bg{width:72px;background:#f0efe8;border-radius:4px;height:6px;display:inline-block;vertical-align:middle;margin-left:5px}
+.pbar-fg{height:6px;border-radius:4px}
+
+/* SESIONES */
+.ses-item{background:#fff;border:.5px solid #ddd;border-radius:9px;padding:9px 13px;margin-bottom:6px;display:flex;align-items:center;gap:10px;font-size:13px;flex-wrap:wrap}
+.ses-fecha{font-weight:500;min-width:160px}
+.tag{border-radius:20px;padding:2px 9px;font-size:11px;font-weight:500}
+.tag-p1{background:#ede9f8;color:#3c348a}
+.tag-p2{background:#e1f5ee;color:#0f6e56}
+.tag-g{background:#f0efe8;color:#555}
+
+/* DESCARGA */
+.dl-card{background:#fff;border-radius:12px;border:.5px solid #ddd;padding:1.1rem 1.2rem;margin-bottom:.9rem}
+.dl-row{background:#f8f8f5;border-radius:9px;padding:11px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:7px}
+.ok-banner{background:#d4edda;border:.5px solid #27ae60;border-radius:8px;padding:10px 14px;font-size:13px;color:#1a6b38;margin-bottom:.9rem;display:none}
+.info-box{background:#ede9f8;border:.5px solid #c4b8f0;border-radius:10px;padding:1rem 1.2rem;font-size:13px;color:#3c348a;line-height:1.8}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📋 Control de Asistencias — Bachillerato</h1>
+  <span class="sub" id="hoy-txt"></span>
+</header>
+
+<div class="nav">
+  <button class="nav-btn active" data-panel="pase">✏️ Pasar Lista</button>
+  <button class="nav-btn" data-panel="acumulado">📊 Acumulado</button>
+  <button class="nav-btn" data-panel="sesiones">📅 Sesiones</button>
+  <button class="nav-btn" data-panel="descargar">⬇️ Descargar CSV</button>
+</div>
+
+<div id="panel-pase"      class="panel active"></div>
+<div id="panel-acumulado" class="panel"></div>
+<div id="panel-sesiones"  class="panel"></div>
+<div id="panel-descargar" class="panel"></div>
+
+<script>
+// ── PERIODOS ─────────────────────────────────────────────────────────────────
+const PERIODOS = {
+  1: { label:'Primer Periodo',  inicio:'2025-03-23', fin:'2025-05-12', color:'#3c348a' },
+  2: { label:'Segundo Periodo', inicio:'2025-05-13', fin:'2025-06-17', color:'#0f6e56' }
+};
+
+// ── ALUMNOS ───────────────────────────────────────────────────────────────────
+const GRUPOS = {
+  G:["ARROYO CEDILLO RODRIGO","ASCENCIO ESPINDOLA GAEL","BANDERA LUNA DIEGO ALEXANDER","BATALLA GARCEZ ABRIL","BELTRAN MENDEZ ANGEL IVAN","BERNAL BARON FERNANDO GAEL","BOSQUES RAMOS JEREMY NAIM","BRITO CALDERON JUAN MANUEL","CAMBRON SOLLANO ARMANDO GERZAIM","CORRALES TOVAR LUIS ANGEL","CRUZ PERALTA KEVIN ALFONSO","GARCIA ZARATE ARI","GAYON FIGUEROA REGINA","GERONIMO ORTEGA ALEX GEOVANNI","GOMEZ CASTILLO KEVIN ALEX","GUZMAN AZUSETH","HERNANDEZ ALBA JEREMY JESHUA","HERNANDEZ OCAMPO SERGIO GABINO","HERNANDEZ RAMIREZ DONALDO","JARAMILLO ALARCON EMILIO ANTONIO","JARILLO APAEZ OMAR","JUAREZ TREJO RICARDO","LAGUNAS RODRIGUEZ MARTIN URIEL","MARTINEZ RAMIREZ LUIS FERNANDO","MORALES VILLA RUBEN","NAVARRETE MORALES GAEL","OCAMPO VELAZQUEZ YENNIFER SARAHI","ORIHUELA CAZARES EDGAR IVAN","ORIHUELA DE LA CRUZ AMIEL MAIDALI","ORTEGA MARTINEZ DANA ALEJANDRA","PEREZ BAHENA RIDCA JENIFER","QUIROZ DOMINGUEZ EMILIANO","RAMIREZ GARCIA ROGELIO","ROMERO CASTILLO IAN DAVID","RONCES OSORIO SONIA SOFIA","ROSALES SALDAÑA MONTSERRAT","SALGADO REYNOSO LIZETH","SANCHEZ PALMA ANGEL KIYOSHY","SANDOVAL GARCIA MONSERRAT","SILVA BARRERA EMILIANO GAEL","TARIA VERA YOSELIN","TREJO FLORES MARLON DANIEL","VALERO CADENAS ITZEL","VAZQUEZ ARCIGA HECTOR EDUARDO","VILLALBA ROMAN DAVID"],
+  H:["ALVAREZ FLORES ROBIN EDWIN","AMARO VALLE YAHEL","ARROYO RUEDA MIGUEL ISMAEL","BARRERA CARRILLO ADRIANA","CONTRERAS TRUJILLO JORGE ARMANDO","CRUZ HERNANDEZ JONATHAN RASSIEL","CRUZ LAGUNAS MAURICIO KENAY","DE AQUINO PASCUAL CARLOS ISAAC","DIAZ MENDOZA ANGEL OSWALDO","DUARTE DIAZ KAREN ODETT","ESCOBAR MENDIOLA JESUS EMILIANO","FLORES IGLESIAS URIEL","FUENTES ALCANTARA JESUS DANIEL","FUENTES MUÑOZ AXEL MOISES","GAMARRA MALDONADO ARTURO","GUTIERREZ CHAVEZ LUNA TAMARA","GUZMAN GONZALEZ GILBERTO MANUEL","HERNANDEZ TORRES YOTL CITLALI","IBARRA AGUILAR WUIMEL JESUS","JUAREZ SIMON EMILIANO","MALDONADO SANCHEZ CARLOS ALEXANDER","MARTINEZ MENDOZA JOHANNA ADILENE","MEDEROS SALGADO EVELIN DANIELA","MELENDEZ GUADARRAMA XIMENA","ORTIZ GONZALEZ ANTHONY STEVE","PADILLA LAZCANO KEVIN URIEL","PAZ ARROYO JOSE MARIA","PELAYO CARPANTA XAVIER","QUEZADA PERALTA JOSE SANTIAGO","RAMIREZ ALARCON ANGEL YAHIR","RAMIREZ RAMIREZ ARIEL JOSUE","RENDON SOLIS INGRID JOLHET","REYES LOPEZ VICTOR ISAIAS","RODRIGUEZ BACILIO LUIS ANGEL","RODRIGUEZ NAVARRO MONICA ITZEL","RODRIGUEZ PEREZ JUAN CARLOS","SAGAL RUIZ JONATHAN EMILIANO","SALGADO BELLO CAROLINA","SALGADO MUNDO NATALIA","VALENCIA CRESCENCIO FRANCISCO EFREN","VALLE MENDOZA ALEXANDER","VALLE VILLARINO EMIRET"],
+  I:["ADAN RAMOS MERARY DE JESUS","AREVALO ALCOCER MICHELLE ABIGAIL","BATALLA GARCEZ ALISSON","BENITEZ JARDINES JOSHUA JESUS","BENITEZ MENDEZ LUZ AMERICA","CALZADA ARMENTA AMERICA JANETH","CARBAJAL QUINTERO YARI","CARMONA GUADARRAMA ARIAN","CARRILLO ZAGAL JEAN CARLO","CASTILLO GONZALEZ VERONICA","CERVANTES ORTIZ AZUL SAYURI","FERNANDEZ CARRERA MARIA GUADALUPE","GALINDO CAÑAS KAROL SHECCID","GALINDO ORTIZ MARIA TANNAY","GALINDO ROMERO NEHIEL","GARCIA REYNOSO RENATA JAQUELINE","GODOY LUNA YULIANA","GOMEZ RODRIGUEZ ANGELA MIXTLI","GONZALEZ ISIDORO LESLIE AILIN","GUADARRAMA BARONA MIRIAM","GUADARRAMA DOMINGUEZ LEILANI NAOMI","GUZMAN JIMENEZ SERGIO","GUZMAN TEODORO NAOMI","HERNANDEZ DE LA CRUZ MOISES","HERNANDEZ ESPINDOLA VALERIA","HERRERA LOPEZ YAEL ALEJANDRO","MELO RAMIREZ SERGIO JESUS","MONROY ANZURES JOHANNA","MOYA SANTILLAN MIGUEL","NAVA JAIME DENISSE","OCAMPO DOMINGUEZ VALENTINA","OCAMPO MORENO FRANCISCO EMMANUEL","PASTRANA CASTILLO JAQUELIN","PERALTA FLORES NAHARA JADAI","PEREIDA ARTEAGA LUISA FERNANDA","PEREZ GARCIA CRISTOBAL SANTIAGO","RAMIREZ BARRERA SEBASTIAN MAXIMILIANO","RAMIREZ RUBI XANAT ZAZIL","RODRIGUEZ COTERO LAURA ELISA","RODRIGUEZ HILARIO FERNANDA PAOLA","RODRIGUEZ ZAYNNEZ AMERICA MIRANDA","ROMAN FIGUEROA KEILA JATZIRI","SALGADO QUINTANA FERNANDA VALENTINA","SALGADO TORRES CRISTY MELISA","SALGADO VAZQUEZ LUCERO","SANTANA NUÑEZ ELISA GISSELL","SERVIN HUERTA ALONDRA NAOMI","VALVERDE HERNANDEZ ALLISON ANAEL","VARA ADAME IXCHEL AIXA","VENCES RODRIGUEZ EVELYN","ZUNIGA VEGA FATIMA"],
+  J:["AGUILAR IGLESIAS FERNANDO","AVILES DISCIPLINA FERNANDO MURAD","BARRERA APARICIO CYNTHIA NICOLE","BARRERA MARIN AISLIN CAMILA","CAMPOS ULISES","DAVALOS PIÑA LUZ ELENA","DE LA CRUZ PLASENCIA JOANA MARLEN","DELGADO SALAS JASSON GABRIEL","DIAZ GALLEGOS EMILY MADELAYN","DOMINGUEZ BAHENA VALERIA","FLORES OCHOA BRANDON ANDREY","GARCIA LOPEZ JOEL MARTIN","GONZALEZ MALDONADO AIKO","HERNANDEZ DIAZ DAMIAN ALEXANDER","HERNANDEZ TEJADA LENIN GAEL","LARA JIMENEZ DIEGO YANDEL","MARTINEZ RODRIGUEZ ANGEL","MARTINEZ SOTELO EMANUEL ANTONIO","MENDOZA VANESSA","OCAMPO GUZMAN STEPHANIE MICHELLE","OLVERA MARTINEZ VICENTE EDUARDO","ORTEGA GUZMAN GERALDIN","RAMIREZ HURTADO EDUARDO DAVID","RESENDIZ RODRIGUEZ AZUL YOHANNA","RODRIGUEZ ACACIO KARLA RUBY","SANCHEZ REYNOSO SAUL","SAUCEDO MARTINEZ DANIELA","SEVILLA RAMIREZ MIGUEL ANGEL","SILVESTRE VAZQUEZ LUIS DAVID","SOTELO MIRANDA DIEGO GEOVANNY","TOLENTINO DELGADO MIRIAM","VENTURA PEREZ PAOLA","VILLANUEVA VARGAS INGRID PAOLA"]
+};
+
+// ── ESTADO ────────────────────────────────────────────────────────────────────
+// historial[periodo][fecha][grupo][alumno] = 'p'|'a'|'r'|null
+let historial = {1:{}, 2:{}};
+let periodoActivo = 1;
+let sesionFecha   = '';
+let grupoActivo   = 'G';
+let grupoAcum     = 'G';
+let periodoAcum   = 1;
+
+function save(){ try{ localStorage.setItem('bachi_v4', JSON.stringify(historial)); }catch(e){} }
+function load(){ try{ const d=localStorage.getItem('bachi_v4'); if(d){ const p=JSON.parse(d); if(p[1]&&p[2]) historial=p; } }catch(e){} }
+
+// ── UTILIDADES DE FECHA ───────────────────────────────────────────────────────
+function esDiaValido(f){ const d=new Date(f+'T12:00:00'); return [1,2,3].includes(d.getDay()); }
+function enPeriodo(f,per){ return f>=PERIODOS[per].inicio && f<=PERIODOS[per].fin && esDiaValido(f); }
+function nombreDia(f){ return ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][new Date(f+'T12:00:00').getDay()]; }
+function fechaCorta(f){ return new Date(f+'T12:00:00').toLocaleDateString('es-MX',{day:'numeric',month:'short'}); }
+function fechaLarga(f){ return new Date(f+'T12:00:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+function diasDePeriodo(per){
+  const dias=[];
+  const d=new Date(PERIODOS[per].inicio+'T12:00:00');
+  const fin=new Date(PERIODOS[per].fin+'T12:00:00');
+  while(d<=fin){ const iso=d.toISOString().slice(0,10); if([1,2,3].includes(d.getDay())) dias.push(iso); d.setDate(d.getDate()+1); }
+  return dias;
+}
+
+function periodoDeHoy(){
+  const hoy=todayISO();
+  if(hoy>=PERIODOS[1].inicio && hoy<=PERIODOS[1].fin) return 1;
+  if(hoy>=PERIODOS[2].inicio && hoy<=PERIODOS[2].fin) return 2;
+  if(hoy>PERIODOS[2].fin) return 2;
+  return 1;
+}
+
+// ── DATOS ─────────────────────────────────────────────────────────────────────
+function getSesion(per,f,g){
+  if(!historial[per][f]) historial[per][f]={};
+  if(!historial[per][f][g]){ historial[per][f][g]={}; GRUPOS[g].forEach(n=>historial[per][f][g][n]=null); }
+  return historial[per][f][g];
+}
+function tieneData(per,f,g){
+  if(!historial[per][f]||!historial[per][f][g]) return false;
+  return Object.values(historial[per][f][g]).some(v=>v!==null);
+}
+function sesionesDelPeriodo(per,g){
+  return Object.keys(historial[per]).filter(f=>tieneData(per,f,g)).sort();
+}
+
+// ── PASE ──────────────────────────────────────────────────────────────────────
+function setAlumno(nm,val){
+  const s=getSesion(periodoActivo,sesionFecha,grupoActivo);
+  s[nm]=s[nm]===val?null:val; save(); renderPase();
+}
+function marcarTodos(val){
+  const s=getSesion(periodoActivo,sesionFecha,grupoActivo);
+  GRUPOS[grupoActivo].forEach(n=>s[n]=val); save(); renderPase();
+}
+function limpiarSes(){
+  if(!confirm('¿Limpiar este pase de lista?')) return;
+  if(historial[periodoActivo][sesionFecha]) delete historial[periodoActivo][sesionFecha][grupoActivo];
+  save(); renderPase();
+}
+
+function renderPase(){
+  const panel=document.getElementById('panel-pase');
+  const per=periodoActivo;
+  const P=PERIODOS[per];
+  const dias=diasDePeriodo(per);
+  const hoy=todayISO();
+  if(!sesionFecha || !enPeriodo(sesionFecha,per)) sesionFecha=dias.includes(hoy)?hoy:dias[dias.length-1]||dias[0];
+  const ses=getSesion(per,sesionFecha,grupoActivo);
+  const alumnos=GRUPOS[grupoActivo];
+  const q=(document.getElementById('sp-search')||{}).value||'';
+  const isP2=per===2;
+
+  let p=0,a=0,r=0,n=0;
+  alumnos.forEach(nm=>{const v=ses[nm];if(v==='p')p++;else if(v==='a')a++;else if(v==='r')r++;else n++;});
+  const totalSes=sesionesDelPeriodo(per,grupoActivo).length;
+
+  // Periodos
+  let perBtns='';
+  [1,2].forEach(num=>{
+    const pp=PERIODOS[num];
+    perBtns+=`<button class="per-btn${num===2?' p2':''}${per===num?' active':''}" onclick="periodoActivo=${num};sesionFecha='';renderPase()">
+      <div class="per-titulo">${num===1?'1er':'2do'} Periodo</div>
+      <div class="per-rango">${pp.inicio} → ${pp.fin}</div>
+    </button>`;
+  });
+
+  // Grupo tabs
+  let gtabs='';
+  ['G','H','I','J'].forEach(g=>{
+    const pend=historial[per][sesionFecha]&&historial[per][sesionFecha][g]
+      ?Object.values(historial[per][sesionFecha][g]).filter(v=>v===null).length:GRUPOS[g].length;
+    const tiene=tieneData(per,sesionFecha,g);
+    gtabs+=`<button class="g-btn${isP2?' p2':''}${g===grupoActivo?' active':''}" onclick="grupoActivo='${g}';renderPase()">
+      G-${g} <small style="opacity:.75">${tiene?(pend>0?pend+'✗':'✓'):'—'}</small>
+    </button>`;
+  });
+
+  // Días — agrupados por semana
+  let diasHTML='<div class="dias-grid">';
+  dias.forEach(f=>{
+    const esHoy=f===hoy;
+    const activo=f===sesionFecha;
+    const tiene=tieneData(per,f,grupoActivo);
+    diasHTML+=`<button class="dia-btn${activo?' activo'+(isP2?' p2':''):''}${esHoy?' hoy':''}${tiene?' con-data':''}" onclick="sesionFecha='${f}';renderPase()">
+      <div class="dn">${nombreDia(f)}</div>
+      <div class="df">${fechaCorta(f)}${esHoy?' ★':''}</div>
+    </button>`;
+  });
+  diasHTML+='</div>';
+
+  // Filas
+  let rows='';
+  alumnos.filter(nm=>nm.toLowerCase().includes(q.toLowerCase())).forEach((nm,i)=>{
+    const v=ses[nm];
+    const b=v==='p'?'<span class="badge bp">Presente</span>':v==='a'?'<span class="badge ba">Ausente</span>':v==='r'?'<span class="badge br">Retardo</span>':'<span class="badge bn">—</span>';
+    const safe=nm.replace(/'/g,"\\'");
+    rows+=`<tr>
+      <td class="num">${i+1}</td><td>${nm}</td><td>${b}</td>
+      <td><div class="abts">
+        <button class="abt p${v==='p'?' on':''}" onclick="setAlumno('${safe}','p')">✅</button>
+        <button class="abt a${v==='a'?' on':''}" onclick="setAlumno('${safe}','a')">❌</button>
+        <button class="abt r${v==='r'?' on':''}" onclick="setAlumno('${safe}','r')">⏰</button>
+      </div></td>
+    </tr>`;
+  });
+
+  panel.innerHTML=`
+  <div class="periodo-bar">${perBtns}</div>
+  <div class="card" style="padding:.8rem 1rem;margin-bottom:.8rem">
+    <div style="font-size:12px;color:#888;margin-bottom:.4rem">Selecciona el día (solo Lun / Mar / Mié):</div>
+    ${diasHTML}
+    <div style="font-size:13px;font-weight:500;color:${P.color};margin-top:.3rem">📌 ${fechaLarga(sesionFecha)}</div>
+  </div>
+  <div class="gtabs">${gtabs}</div>
+  <div class="stats-row">
+    <div class="scard p">✅ <span>${p}</span></div>
+    <div class="scard a">❌ <span>${a}</span></div>
+    <div class="scard r">⏰ <span>${r}</span></div>
+    <div class="scard n">— <span>${n}</span></div>
+    <div class="scard s">📅 Sesiones periodo: <span>${totalSes}</span></div>
+  </div>
+  <div class="actions">
+    <button class="${isP2?'btn-p2':'btn-p'}" onclick="marcarTodos('p')">✅ Todos presentes</button>
+    <button onclick="marcarTodos('a')">❌ Todos ausentes</button>
+    <button class="btn-danger btn-sm" onclick="limpiarSes()">🗑 Limpiar</button>
+  </div>
+  <input id="sp-search" class="search" placeholder="Buscar alumno..." oninput="renderPase()" value="${q}">
+  <div class="tbl-wrap"><table>
+    <thead><tr class="${isP2?'p2':''}"><th>#</th><th>Nombre</th><th>Estado</th><th>Marcar</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+// ── ACUMULADO ─────────────────────────────────────────────────────────────────
+function renderAcumulado(){
+  const panel=document.getElementById('panel-acumulado');
+  const per=periodoAcum;
+  const isP2=per===2;
+  const sesList=sesionesDelPeriodo(per,grupoAcum);
+  const total=sesList.length;
+  const q=(document.getElementById('ac-search')||{}).value||'';
+
+  let perBtns='';
+  [1,2].forEach(num=>{
+    perBtns+=`<button class="per-btn${num===2?' p2':''}${per===num?' active':''}" onclick="periodoAcum=${num};renderAcumulado()">
+      <div class="per-titulo">${num===1?'1er':'2do'} Periodo</div>
+      <div class="per-rango">${PERIODOS[num].inicio} → ${PERIODOS[num].fin}</div>
+    </button>`;
+  });
+
+  let gtabs='';
+  ['G','H','I','J'].forEach(g=>{
+    const n=sesionesDelPeriodo(per,g).length;
+    gtabs+=`<button class="g-btn${isP2?' p2':''}${g===grupoAcum?' active':''}" onclick="grupoAcum='${g}';renderAcumulado()">Grupo ${g} <small style="opacity:.7">${n}ses.</small></button>`;
+  });
+
+  let rows='';
+  if(total>0){
+    GRUPOS[grupoAcum].filter(nm=>nm.toLowerCase().includes(q.toLowerCase())).forEach((nm,i)=>{
+      let p=0,a=0,r=0;
+      sesList.forEach(f=>{const v=historial[per][f]&&historial[per][f][grupoAcum]?historial[per][f][grupoAcum][nm]:null;if(v==='p')p++;else if(v==='a')a++;else if(v==='r')r++;});
+      const pct=Math.round((p/total)*100);
+      const col=pct>=80?'#1a8a42':pct>=60?'#b07d00':'#c0392b';
+      rows+=`<tr>
+        <td class="num">${i+1}</td><td style="font-size:13px">${nm}</td>
+        <td class="num-cell p">${p}</td><td class="num-cell a">${a}</td><td class="num-cell r">${r}</td>
+        <td><span style="font-size:13px;font-weight:500;color:${col};min-width:34px;display:inline-block">${pct}%</span>
+          <div class="pbar-bg"><div class="pbar-fg" style="width:${pct}%;background:${col}"></div></div>
+        </td>
+      </tr>`;
+    });
+  }
+
+  panel.innerHTML=`
+  <div class="periodo-bar">${perBtns}</div>
+  <div class="gtabs">${gtabs}</div>
+  <div class="card" style="display:flex;gap:14px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:14px;color:#555">Grupo <b>${grupoAcum}</b> — <b>${GRUPOS[grupoAcum].length}</b> alumnos</span>
+    <span style="font-size:14px;color:#555">Sesiones registradas: <b style="color:${PERIODOS[per].color}">${total}</b> / ${diasDePeriodo(per).length} posibles</span>
+    ${total>0?`<span style="font-size:12px;color:#888">${sesList[0]} → ${sesList[sesList.length-1]}</span>`:''}
+  </div>
+  ${total===0?'<div style="background:#fff3cd;border:.5px solid #f0ad4e;border-radius:8px;padding:10px 14px;font-size:13px;color:#856404;margin-top:.8rem">⚠️ No hay sesiones registradas para este grupo en este periodo.</div>':''}
+  ${total>0?`
+  <input id="ac-search" class="search" placeholder="Buscar alumno..." oninput="renderAcumulado()" value="${q}" style="margin-top:.8rem">
+  <div class="tbl-wrap"><table>
+    <thead><tr class="${isP2?'p2':''}"><th>#</th><th>Nombre</th><th>✅ Asist.</th><th>❌ Faltas</th><th>⏰ Ret.</th><th>% Asistencia</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`:''}`;
+}
+
+// ── SESIONES ──────────────────────────────────────────────────────────────────
+function renderSesiones(){
+  const panel=document.getElementById('panel-sesiones');
+  let html='';
+  let total=0;
+  [1,2].forEach(per=>{
+    const P=PERIODOS[per];
+    const fechas=Object.keys(historial[per]).filter(f=>['G','H','I','J'].some(g=>tieneData(per,f,g))).sort().reverse();
+    if(!fechas.length) return;
+    html+=`<div style="font-size:14px;font-weight:500;color:${P.color};margin:1rem 0 .5rem">${P.label} — ${P.inicio} al ${P.fin}</div>`;
+    fechas.forEach(f=>{
+      ['G','H','I','J'].forEach(g=>{
+        if(!tieneData(per,f,g)) return;
+        total++;
+        let p=0,a=0,r=0;
+        Object.values(historial[per][f][g]).forEach(v=>{if(v==='p')p++;else if(v==='a')a++;else if(v==='r')r++;});
+        html+=`<div class="ses-item">
+          <span class="ses-fecha" style="color:${P.color}">${fechaLarga(f)}</span>
+          <span class="tag tag-p${per}">P${per}</span>
+          <span class="tag tag-g">Grupo ${g}</span>
+          <span style="color:#555;flex:1;font-size:12px">✅${p} ❌${a} ⏰${r}</span>
+          <button class="btn-sm" onclick="irASesion(${per},'${f}','${g}')">✏️ Editar</button>
+          <button class="btn-sm btn-danger" onclick="borrarSes(${per},'${f}','${g}')">🗑</button>
+        </div>`;
+      });
+    });
+  });
+  if(!total) html='<div style="background:#fff3cd;border:.5px solid #f0ad4e;border-radius:8px;padding:12px;color:#856404;font-size:13px">⚠️ No hay sesiones registradas todavía.</div>';
+  else html=`<div class="card" style="font-size:13px;color:#555;margin-bottom:.8rem">Total de sesiones guardadas: <b>${total}</b></div>`+html;
+  panel.innerHTML=html;
+}
+function irASesion(per,f,g){ periodoActivo=per; sesionFecha=f; grupoActivo=g; activarPanel('pase'); renderPase(); }
+function borrarSes(per,f,g){
+  if(!confirm(`¿Eliminar la sesión ${fechaLarga(f)}, Grupo ${g}?`)) return;
+  if(historial[per][f]){ delete historial[per][f][g]; if(!Object.keys(historial[per][f]).length) delete historial[per][f]; }
+  save(); renderSesiones();
+}
+
+// ── DESCARGA ──────────────────────────────────────────────────────────────────
+function etq(v){ return v==='p'?'P':v==='a'?'A':v==='r'?'R':'-'; }
+
+function generarCSV(per,g){
+  const sesList=sesionesDelPeriodo(per,g);
+  if(!sesList.length) return null;
+  let enc=`"NOMBRE"`;
+  sesList.forEach(f=>enc+=`,"${nombreDia(f).toUpperCase()} ${f}"`);
+  enc+=',"TOTAL ASIST.","TOTAL FALTAS","TOTAL RETARDOS","% ASISTENCIA"';
+  const filas=[enc];
+  GRUPOS[g].forEach(nm=>{
+    let fila=`"${nm}"`;
+    let p=0,a=0,r=0;
+    sesList.forEach(f=>{
+      const v=historial[per][f]&&historial[per][f][g]?historial[per][f][g][nm]:null;
+      fila+=`,${etq(v)}`; if(v==='p')p++;else if(v==='a')a++;else if(v==='r')r++;
+    });
+    const pct=sesList.length>0?Math.round((p/sesList.length)*100):0;
+    fila+=`,${p},${a},${r},${pct}%`;
+    filas.push(fila);
+  });
+  return filas.join('\n');
+}
+
+function dl(csv,fname){ const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv); a.download=fname; a.click(); }
+
+function descargarUno(per,g){
+  const csv=generarCSV(per,g);
+  if(!csv){ alert('No hay datos para el Grupo '+g+' en este periodo.'); return; }
+  const nombre=`P${per}_Grupo_${g}_${PERIODOS[per].inicio}_${PERIODOS[per].fin}.csv`;
+  dl(csv,nombre);
+  mostrarOK('Descargado: '+nombre);
+}
+
+function descargarPeriodo(per){
+  let alguno=false;
+  ['G','H','I','J'].forEach(g=>{ const csv=generarCSV(per,g); if(csv){ dl(csv,`P${per}_Grupo_${g}_${PERIODOS[per].inicio}_${PERIODOS[per].fin}.csv`); alguno=true; } });
+  if(!alguno){ alert('No hay datos registrados en este periodo.'); return; }
+  mostrarOK(`Descargados todos los grupos del ${PERIODOS[per].label}.`);
+}
+
+function descargarTodo(){
+  let alguno=false;
+  [1,2].forEach(per=>['G','H','I','J'].forEach(g=>{ const csv=generarCSV(per,g); if(csv){ dl(csv,`P${per}_Grupo_${g}_${PERIODOS[per].inicio}_${PERIODOS[per].fin}.csv`); alguno=true; } }));
+  if(!alguno){ alert('No hay datos registrados todavía.'); return; }
+  mostrarOK('Descargados todos los archivos disponibles.');
+}
+
+function mostrarOK(msg){
+  const b=document.getElementById('ok-banner');
+  if(b){ b.textContent='✅ '+msg; b.style.display='block'; setTimeout(()=>b.style.display='none',5000); }
+}
+
+function renderDescargar(){
+  const panel=document.getElementById('panel-descargar');
+  let html=`<div id="ok-banner" class="ok-banner"></div>`;
+
+  [1,2].forEach(per=>{
+    const P=PERIODOS[per];
+    const isP2=per===2;
+    const diasTotales=diasDePeriodo(per).length;
+    html+=`<div class="dl-card">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:.9rem">
+        <div>
+          <div style="font-size:15px;font-weight:500;color:${P.color}">${P.label}</div>
+          <div style="font-size:12px;color:#888">${P.inicio} al ${P.fin} — ${diasTotales} sesiones posibles (L/M/X)</div>
+        </div>
+        <button class="${isP2?'btn-p2':'btn-p'} btn-sm" style="margin-left:auto" onclick="descargarPeriodo(${per})">⬇️ Descargar todos los grupos</button>
+      </div>`;
+    ['G','H','I','J'].forEach(g=>{
+      const sesList=sesionesDelPeriodo(per,g);
+      const n=sesList.length;
+      const rango=n>0?`${sesList[0]} → ${sesList[sesList.length-1]}`:'Sin sesiones';
+      html+=`<div class="dl-row">
+        <div style="font-size:14px;font-weight:500;min-width:75px">Grupo ${g}</div>
+        <div style="font-size:13px;color:#666;flex:1"><b style="color:${P.color}">${n}</b> sesiones ${n>0?'('+rango+')':''}</div>
+        ${n>0?`<button class="${isP2?'btn-p2':'btn-p'} btn-sm" onclick="descargarUno(${per},'${g}')">⬇️ CSV</button>`:`<span style="font-size:12px;color:#bbb">sin datos</span>`}
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+
+  html+=`<div class="dl-card" style="text-align:center">
+    <button class="btn-dl" onclick="descargarTodo()">⬇️ DESCARGAR CSV — TODOS LOS PERIODOS Y GRUPOS</button>
+  </div>
+  <div class="info-box">
+    <b>Formato del CSV:</b><br>
+    • Una <b>fila por alumno</b><br>
+    • Una <b>columna por sesión</b> con el día y la fecha (ej: LUN 2025-03-24, MAR 2025-03-25…)<br>
+    • Valores: <b>P</b> = Presente &nbsp; <b>A</b> = Ausente &nbsp; <b>R</b> = Retardo &nbsp; <b>-</b> = Sin registrar<br>
+    • Columnas finales: Total Asistencias / Total Faltas / Total Retardos / % Asistencia<br>
+    • El archivo se nombra automáticamente con el periodo, grupo y rango de fechas
+  </div>`;
+
+  panel.innerHTML=html;
+}
+
+// ── NAVEGACIÓN ────────────────────────────────────────────────────────────────
+function activarPanel(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  document.querySelector(`[data-panel="${id}"]`).classList.add('active');
+}
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const id=btn.dataset.panel;
+    activarPanel(id);
+    if(id==='pase') renderPase();
+    else if(id==='acumulado') renderAcumulado();
+    else if(id==='sesiones') renderSesiones();
+    else if(id==='descargar') renderDescargar();
+  });
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.getElementById('hoy-txt').textContent = new Date().toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+load();
+periodoActivo = periodoDeHoy();
+periodoAcum   = periodoDeHoy();
+const hoy=todayISO();
+const diasP=diasDePeriodo(periodoActivo);
+sesionFecha = diasP.includes(hoy) ? hoy : diasP[diasP.length-1]||diasP[0];
+renderPase();
+</script>
+</body>
+</html>
